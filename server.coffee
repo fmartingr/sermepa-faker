@@ -165,15 +165,18 @@ valid_handler = (request, response) ->
 		if not empty HTTP_AUTH
 			post_options.headers['Authorization'] = HTTP_AUTH
 
+		_response = response
+
 		post_request = http.request post_options, (response) ->
 			response.setEncoding 'UTF-8'
 			response.on 'data', (chunk) ->
 				console.log "[ <= ] After POST response: #{chunk}"
 
+			redirect _response, transaction.Ds_Merchant_UrlOK
+
 		post_request.write _post_data
 		post_request.end()
 
-		redirect response, transaction.Ds_Merchant_UrlOK
 
 # Send an invalid response to your app
 # TODO
