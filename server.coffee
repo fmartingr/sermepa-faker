@@ -20,6 +20,9 @@ querystring = require 'querystring'
 DEBUG = true
 # Port to listen on
 PORT = 8080
+# Http Auth for Post request
+HTTP_AUTH = ''
+#HTTP_AUTH = 'Basic ' + new Buffer('USERNAME:PASSWORD').toString('base64');
 
 # Do TPV data validation
 VALIDATE = 
@@ -93,8 +96,10 @@ valid_handler = (request, response) ->
 
 	request.addListener 'data', (chunk) ->
 		body += chunk
+
 	request.addListener 'end', ->
 		post_params = querystring.parse body
+
 		transaction = REQUESTS[post_params.request]
 		response_url = transaction.Ds_Merchant_MerchantURL
 		_response_url = url.parse response_url, true
@@ -116,6 +121,8 @@ valid_handler = (request, response) ->
 				'Content-Type': 'application/x-www-form-urlencoded'
 				'Content-Length': _post_data.length
 
+		if not empty HTTP_AUTH
+			post_options.headers['Authorization'] = HTTP_AUTH
 
 		post_request = http.request post_options, (response) ->
 			response.setEncoding 'UTF-8'
