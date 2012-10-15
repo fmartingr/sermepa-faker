@@ -10,11 +10,11 @@
 	</head>
 	<body class="acenter">
 		<h1>SERMEPA Faker ;D</h1>
-		<form action="/valid">
+		<form action="/valid" method="post">
 			<input type="hidden" name="request" value="{{ request }}" />
 			<button type="submit" class="btn btn-large btn-success">Valid credit card</button>
 		</form>
-		<form action="/invalid">
+		<form action="/invalid" method="post">
 			<input type="hidden" name="request" value="{{ request }}" />
 			<button type="submit" class="btn btn-large btn-danger">Invalid credit card</button>
 		</form>
