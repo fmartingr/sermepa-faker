@@ -40,7 +40,7 @@ REQUESTS = []
 # TODO for Validation ^^
 # Parses the response data
 parse_response = (items) ->
-	true
+	querystring.stringify items
 
 # Validates the form data
 check_request = (request) ->
@@ -55,7 +55,7 @@ redirect = (response, url) ->
 
 # Check if an object is empty
 empty = (object) ->
-	return (k for own k of object).length is 0
+	(k for own k of object).length is 0
 
 # [][] HANDLERS
 
