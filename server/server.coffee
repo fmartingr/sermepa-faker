@@ -59,6 +59,7 @@ empty = (object) ->
 
 # [][] HANDLERS
 
+# Main page that allows to send a (non-)valid response to our app
 home_handler = (request, response) ->
 	console.log "[ <= ] Request: /" if DEBUG
 
@@ -82,7 +83,7 @@ home_handler = (request, response) ->
 		else
 			# Main response
 			template = fs.readFileSync('tpv.html').toString()
-			html = _.template template, { foo: 'bar' }
+			html = _.template template, { request: 1 }
 			response.write html
 
 		response.end()

@@ -1,14 +1,22 @@
 <html>
 	<head>
 		<title>SERMEPA Fake TPV</title>
+		<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap.min.css" rel="stylesheet">
+		<style type="text/css">
+			body {
+				text-align: center;
+			}
+		</style>
 	</head>
-	<body>
-		<h1>{{ foo }}</h1>
+	<body class="acenter">
+		<h1>SERMEPA Faker ;D</h1>
 		<form action="/valid">
-			<input type="submit" value="Valid" />
+			<input type="hidden" name="request" value="{{ request }}" />
+			<button type="submit" class="btn btn-large btn-success">Valid credit card</button>
 		</form>
 		<form action="/invalid">
-			<input type="submit" value="Invalid" />
+			<input type="hidden" name="request" value="{{ request }}" />
+			<button type="submit" class="btn btn-large btn-danger">Invalid credit card</button>
 		</form>
 	</body>
 </html>
