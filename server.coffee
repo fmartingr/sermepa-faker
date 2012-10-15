@@ -14,6 +14,7 @@ fs = require 'fs'
 http = require 'http'
 url = require 'url'
 querystring = require 'querystring'
+crypto = require 'crypto'
 
 # [][][] CONFIGURATION
 # Verbose in console
@@ -26,11 +27,10 @@ HTTP_AUTH = ''
 
 # Do TPV data validation
 VALIDATE = 
-	do: false
-	# Merchant Code
-	merchant_code: ''
+	do: true
 	# Secret Key
-	secret_key: ''
+	secret_key: 'qwertyasdf0123456789'
+	terminal: '001'
 
 # using {{}} for underscore
 _.templateSettings =
@@ -82,9 +82,28 @@ home_handler = (request, response) ->
 				redirect response, request.headers.referer
 		else
 			# Main response
+			if VALIDATE.do
+				validation_string = post_params.Ds_Merchant_Amount + post_params.Ds_Merchant_Order + post_params.Ds_Merchant_MerchantCode + post_params.Ds_Merchant_Currency + post_params.Ds_Merchant_TransactionType + post_params.Ds_Merchant_MerchantURL + VALIDATE.secret_key
+				console.log validation_string
+				shasum = crypto.createHash('sha1')
+					.update(validation_string.toString())
+					.digest 'hex'
+				post_params['_validation_sha1'] = shasum.toUpperCase()
+
+			# Making html table
+			table = ''
+			for key of post_params
+				table += """
+					<tr>
+						<td>#{key}</td>
+						<td>#{post_params[key]}</td>
+					</tr>
+				"""
+
+			# Normal
 			request_number = (REQUESTS.push post_params) - 1 
 			template = fs.readFileSync('tpv.html').toString()
-			html = _.template template, { request: request_number }
+			html = _.template template, { request: request_number, data_table: table }
 			response.write html
 
 		response.end()
@@ -105,7 +124,29 @@ valid_handler = (request, response) ->
 		_response_url = url.parse response_url, true
 		
 		if VALIDATE.do
-			
+			# Response: Digest=SHA-1(Ds_ Amount + Ds_ Order + Ds_MerchantCode + Ds_ Currency + Ds _Response + CLAVE SECRETA)	
+			if transaction.Ds_Merchant_MerchantSignature is transaction._validation_sha1
+				signature_string = transaction.Ds_Merchant_Amount + transaction.Ds_Merchant_Order + transaction.Ds_Merchant_MerchantCode + transaction.Ds_Merchant_Currency + '0000' + VALIDATE.secret_key
+				signature = crypto.createHash('sha1').update(signature_string).digest('hex').toUpperCase()
+				post_data = 
+					#'Ds_Date': '27/12/2011'
+					#'Ds_Hour': '11:46'
+					'Ds_SecurePayment': '1'
+					'Ds_Card_Country': '724'
+					'Ds_Amount': transaction.Ds_Merchant_Amount
+					'Ds_Currency': transaction.Ds_Merchant_Currency
+					'Ds_Order': transaction.Ds_Merchant_Order
+					'Ds_MerchantCode': transaction.Ds_Merchant_MerchantCode
+					'Ds_Terminal': VALIDATE.terminal
+					'Ds_Signature': signature
+					'Ds_Response': '0000'
+					'Ds_MerchantData': transaction.Ds_Merchant_MerchantData
+					'Ds_TransactionType': transaction.Ds_Merchant_TransactionType
+					'Ds_ConsumerLanguage': '1'
+					'Ds_AuthorisationCode': '000000'
+			else
+				post_data =
+					'Ds_Response': '9999'	
 		else
 			post_data =
 				'Ds_Response': '0000'
