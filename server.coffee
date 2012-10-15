@@ -68,9 +68,6 @@ home_handler = (request, response) ->
 
 	request.addListener 'data', (chunk) ->
 		body += chunk
-	# Listener
-	request.addListener 'data', (chunk) ->
-		body += chunk
 
 	# End (parse POST data)
 	request.addListener 'end', ->
@@ -82,11 +79,34 @@ home_handler = (request, response) ->
 				redirect response, request.headers.referer
 		else
 			# Main response
+			request_number = (REQUESTS.push post_params) - 1 
 			template = fs.readFileSync('tpv.html').toString()
-			html = _.template template, { request: 1 }
+			html = _.template template, { request: request_number }
 			response.write html
 
 		response.end()
+
+# Send a valid response to you app
+valid_handler = (request, response) ->
+	body = ''
+	post_params = ''
+
+	request.addListener 'data', (chunk) ->
+		body += chunk
+
+	request.addListener 'end', ->
+		true
+
+# Send an invalid response to your app
+invalid_handler = (request, response) ->
+	body = ''
+	post_params = ''
+
+	request.addListener 'data', (chunk) ->
+		body += chunk
+
+	request.addListener 'end', ->
+		true
 
 # [][] Server codez
 http.createServer (request, response) ->
