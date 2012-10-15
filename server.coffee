@@ -14,14 +14,23 @@ querystring = require 'querystring'
 
 # [][][] CONFIGURATION
 # Return to referer (POST TESTS)
-DEVELOPING = true
+DEVELOPING = false
 # Verbose in console
 DEBUG = true
 # Port to listen on
 PORT = 8080
 
+# Do TPV data validation
+VALIDATE = 
+	do: false
+	# Merchant Code
+	merchant_code: ''
+	# Secret Key
+	secret_key: ''
+
 # [][][] LET'S DO THIS
 
+# TODO for Validation ^^
 # Parses the response data
 parse_response = (items) ->
 	true
@@ -41,17 +50,23 @@ http.createServer (request, response) ->
 	# Listener
 	request.addListener 'data', (chunk) ->
 		body += chunk
-		console.log "BODY CHUNK: #{chunk}" if DEBUG
 
 	# End (parse POST data)
 	request.addListener 'end', ->
 		post_params = querystring.parse body
 		if DEBUG
-			console.log "POST PARAMS: "
+			console.log "[ -- ] POST received: "
 			console.log post_params
 
-	# Go back to the form if we're doing tests	
-	if DEVELOPING
-		response.writeHead 
-			'Location': request.headers.referer
+		if post_params is {}
+			console.log "[ -- ] Empty POST, doing nothing!"
+		else
+			# Go back to the form if we're doing tests	
+			if DEVELOPING and request.headers.referer?
+				console.log "[ => ] Redirecting to '#{request.headers.referer}'"
+				response.writeHead 302,
+					'Location': request.headers.referer
+				response.end()
+			true
+
 .listen PORT
