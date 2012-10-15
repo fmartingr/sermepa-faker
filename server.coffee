@@ -84,7 +84,6 @@ home_handler = (request, response) ->
 			# Main response
 			if VALIDATE.do
 				validation_string = post_params.Ds_Merchant_Amount + post_params.Ds_Merchant_Order + post_params.Ds_Merchant_MerchantCode + post_params.Ds_Merchant_Currency + post_params.Ds_Merchant_TransactionType + post_params.Ds_Merchant_MerchantURL + VALIDATE.secret_key
-				console.log validation_string
 				shasum = crypto.createHash('sha1')
 					.update(validation_string.toString())
 					.digest 'hex'
@@ -108,8 +107,7 @@ home_handler = (request, response) ->
 
 		response.end()
 
-# Send a valid response to you app
-valid_handler = (request, response) ->
+response_handler = (request, response, response_code) ->
 	body = ''
 	post_params = ''
 
@@ -123,10 +121,13 @@ valid_handler = (request, response) ->
 		response_url = transaction.Ds_Merchant_MerchantURL
 		_response_url = url.parse response_url, true
 		
+		_redirect_url = transaction.Ds_Merchant_UrlOK
+		_redirect_url = transaction.Ds_Merchant_UrlKO if response_code isnt '0000'
+		
 		if VALIDATE.do
 			# Response: Digest=SHA-1(Ds_ Amount + Ds_ Order + Ds_MerchantCode + Ds_ Currency + Ds _Response + CLAVE SECRETA)	
 			if transaction.Ds_Merchant_MerchantSignature is transaction._validation_sha1
-				signature_string = transaction.Ds_Merchant_Amount + transaction.Ds_Merchant_Order + transaction.Ds_Merchant_MerchantCode + transaction.Ds_Merchant_Currency + '0000' + VALIDATE.secret_key
+				signature_string = transaction.Ds_Merchant_Amount + transaction.Ds_Merchant_Order + transaction.Ds_Merchant_MerchantCode + transaction.Ds_Merchant_Currency + response_code + VALIDATE.secret_key
 				signature = crypto.createHash('sha1').update(signature_string).digest('hex').toUpperCase()
 				post_data = 
 					#'Ds_Date': '27/12/2011'
@@ -139,17 +140,17 @@ valid_handler = (request, response) ->
 					'Ds_MerchantCode': transaction.Ds_Merchant_MerchantCode
 					'Ds_Terminal': VALIDATE.terminal
 					'Ds_Signature': signature
-					'Ds_Response': '0000'
+					'Ds_Response': response_code
 					'Ds_MerchantData': transaction.Ds_Merchant_MerchantData
 					'Ds_TransactionType': transaction.Ds_Merchant_TransactionType
 					'Ds_ConsumerLanguage': '1'
 					'Ds_AuthorisationCode': '000000'
 			else
 				post_data =
-					'Ds_Response': '9999'	
+					'Ds_Response': '9999'
 		else
 			post_data =
-				'Ds_Response': '0000'
+				'Ds_Response': response_code
 
 		_post_data = parse_response post_data
 
@@ -172,23 +173,20 @@ valid_handler = (request, response) ->
 			response.on 'data', (chunk) ->
 				console.log "[ <= ] After POST response: #{chunk}"
 
-			redirect _response, transaction.Ds_Merchant_UrlOK
+			redirect _response, _redirect_url
 
 		post_request.write _post_data
 		post_request.end()
+
+# Send a valid response to you app
+valid_handler = (request, response) ->
+	response_handler request, response, "0000"
 
 
 # Send an invalid response to your app
 # TODO
 invalid_handler = (request, response) ->
-	body = ''
-	post_params = ''
-
-	request.addListener 'data', (chunk) ->
-		body += chunk
-
-	request.addListener 'end', ->
-		post_params = querystring.parse body
+	response_handler request, response, "0184"
 
 # [][] Server codez
 http.createServer (request, response) ->
