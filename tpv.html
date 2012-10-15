@@ -10,6 +10,10 @@
 	</head>
 	<body class="acenter">
 		<h1>SERMEPA Faker ;D</h1>
+		<h3>POST data sent:</h3>
+		<table class="table">
+			{{ data_table }}
+		</table>
 		<form action="/valid" method="post">
 			<input type="hidden" name="request" value="{{ request }}" />
 			<button type="submit" class="btn btn-large btn-success">Valid credit card</button>
