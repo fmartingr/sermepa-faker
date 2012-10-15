@@ -14,7 +14,7 @@ querystring = require 'querystring'
 
 # [][][] CONFIGURATION
 # Return to referer (POST TESTS)
-DEVELOPING = false
+DEVELOPING = true
 # Verbose in console
 DEBUG = true
 # Port to listen on
@@ -53,5 +53,5 @@ http.createServer (request, response) ->
 	# Go back to the form if we're doing tests	
 	if DEVELOPING
 		response.writeHead 
-			'Location': response.headers.referer
+			'Location': request.headers.referer
 .listen PORT
