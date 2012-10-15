@@ -39,6 +39,17 @@ parse_response = (items) ->
 check_request = (request) ->
 	true
 
+# Redirect function
+redirect = (response, url) ->
+	console.log "[ => ] Redirecting to '#{url}'"
+	response.writeHead 302,
+		'Location': url
+	response.end()
+
+# Check if an object is empty
+empty = (object) ->
+	return (k for own k of object).length is 0
+
 # Server codez
 http.createServer (request, response) ->
 	body = ''
@@ -54,12 +65,14 @@ http.createServer (request, response) ->
 	# End (parse POST data)
 	request.addListener 'end', ->
 		post_params = querystring.parse body
-		if DEBUG
-			console.log "[ -- ] POST received: "
-			console.log post_params
 
-		if post_params is {}
+		console.log "[ == ] POST received"
+		console.log post_params if DEBUG and not empty post_params
+
+		if empty post_params
 			console.log "[ -- ] Empty POST, doing nothing!"
+			if request.headers.referer?
+				redirect response, request.headers.referer
 		else
 			# Go back to the form if we're doing tests	
 			if DEVELOPING and request.headers.referer?
