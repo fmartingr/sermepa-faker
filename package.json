@@ -1,0 +1,24 @@
+{
+  "author": {
+    "name": "Felipe Martín",
+    "email": "me@fmartingr.com"
+  },
+  "name": "sermepa-faker",
+  "description": "Custom SERMEPA TPV fake for testing",
+  "version": "0.1",
+  "main": "./lib/server.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/fmartingr/sermepa-faker.git"
+  },
+  "dependencies": {
+    
+  },
+  "devDependencies": {
+
+  },
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
