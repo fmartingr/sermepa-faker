@@ -9,12 +9,13 @@
 #
 ##########################
 
+_ = require 'underscore'
+fs = require 'fs'
 http = require 'http'
+url = require 'url'
 querystring = require 'querystring'
 
 # [][][] CONFIGURATION
-# Return to referer (POST TESTS)
-DEVELOPING = false
 # Verbose in console
 DEBUG = true
 # Port to listen on
@@ -28,7 +29,13 @@ VALIDATE =
 	# Secret Key
 	secret_key: ''
 
+# using {{}} for underscore
+_.templateSettings =
+	interpolate : /\{\{(.+?)\}\}/g
+
 # [][][] LET'S DO THIS
+
+REQUESTS = []
 
 # TODO for Validation ^^
 # Parses the response data
@@ -50,14 +57,16 @@ redirect = (response, url) ->
 empty = (object) ->
 	return (k for own k of object).length is 0
 
-# Server codez
-http.createServer (request, response) ->
+# [][] HANDLERS
+
+home_handler = (request, response) ->
+	console.log "[ <= ] Request: /" if DEBUG
+
 	body = ''
 	post_params = ''
-	request.setEncoding 'UTF-8'
 
-	console.log "[ <= ] Received request!" if DEBUG
-
+	request.addListener 'data', (chunk) ->
+		body += chunk
 	# Listener
 	request.addListener 'data', (chunk) ->
 		body += chunk
@@ -66,20 +75,27 @@ http.createServer (request, response) ->
 	request.addListener 'end', ->
 		post_params = querystring.parse body
 
-		console.log "[ == ] POST received"
-		console.log post_params if DEBUG and not empty post_params
-
+		# If POST is empty, redirect to referer
 		if empty post_params
-			console.log "[ -- ] Empty POST, doing nothing!"
 			if request.headers.referer?
 				redirect response, request.headers.referer
 		else
-			# Go back to the form if we're doing tests	
-			if DEVELOPING and request.headers.referer?
-				console.log "[ => ] Redirecting to '#{request.headers.referer}'"
-				response.writeHead 302,
-					'Location': request.headers.referer
-				response.end()
-			true
+			# Main response
+			template = fs.readFileSync('tpv.html').toString()
+			html = _.template template, { foo: 'bar' }
+			response.write html
+
+		response.end()
+
+# [][] Server codez
+http.createServer (request, response) ->
+	request.setEncoding 'UTF-8'
+
+	url_parts = url.parse request.url
+
+	switch url_parts.pathname
+		when '/valid' then valid_handler request, response
+		when '/invalid' then invalid_handler request, response
+		when '/' then home_handler request, response
 
 .listen PORT
