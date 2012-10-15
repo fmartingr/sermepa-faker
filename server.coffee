@@ -93,11 +93,42 @@ valid_handler = (request, response) ->
 
 	request.addListener 'data', (chunk) ->
 		body += chunk
-
 	request.addListener 'end', ->
-		true
+		post_params = querystring.parse body
+		transaction = REQUESTS[post_params.request]
+		response_url = transaction.Ds_Merchant_MerchantURL
+		_response_url = url.parse response_url, true
+		
+		if VALIDATE.do
+			
+		else
+			post_data =
+				'Ds_Response': '0000'
+
+		_post_data = parse_response post_data
+
+		post_options = 
+			host: _response_url.hostname
+			port: 80
+			path: _response_url.pathname
+			method: "POST"
+			headers:
+				'Content-Type': 'application/x-www-form-urlencoded'
+				'Content-Length': _post_data.length
+
+
+		post_request = http.request post_options, (response) ->
+			response.setEncoding 'UTF-8'
+			response.on 'data', (chunk) ->
+				console.log "[ <= ] After POST response: #{chunk}"
+
+		post_request.write _post_data
+		post_request.end()
+
+		redirect response, transaction.Ds_Merchant_UrlOK
 
 # Send an invalid response to your app
+# TODO
 invalid_handler = (request, response) ->
 	body = ''
 	post_params = ''
@@ -106,7 +137,7 @@ invalid_handler = (request, response) ->
 		body += chunk
 
 	request.addListener 'end', ->
-		true
+		post_params = querystring.parse body
 
 # [][] Server codez
 http.createServer (request, response) ->
